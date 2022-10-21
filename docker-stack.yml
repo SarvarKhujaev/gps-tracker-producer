@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+    app:
+        image: ${CI_REGISTRY}/${CI_PROJECT_PATH}:latest
+        networks:
+            - proxy_network
+        ports:
+            - ${TRACKER_PORT}:${TRACKER_PORT}
+
+        environment:
+            SERVER_PORT: ${SERVER_PORT}
+            SERVER_ADDR: ${SERVER_ADDR}
+
+            TRACKER_PORT: ${TRACKER_PORT}
+
+            KAFKA_BROKER: ${KAFKA_BROKER}
+            GROUP_ID_FOR_KAFKA: ${GROUP_ID_FOR_KAFKA}
+
+            RAW_GPS_LOCATION_TOPIC_DEV: ${RAW_GPS_LOCATION_TOPIC_DEV}
+            RAW_GPS_LOCATION_TOPIC_PROD: ${RAW_GPS_LOCATION_TOPIC_PROD}
+
+        deploy:
+            replicas:  ${REPLICAS}
+            placement:
+                constraints: [node.labels.mgmt != true ]
+
+networks:
+    proxy_network:
+        external: true
