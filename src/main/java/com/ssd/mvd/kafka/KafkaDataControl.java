@@ -36,7 +36,6 @@ public class KafkaDataControl {
 
     private final Predicate< Position > checkPosition = position -> position.getLatitude() > 0
             && position.getLongitude() > 0
-            && position.getSpeed() > 0
             && position.getDeviceTime()
             .after( new Date( 1605006666774L ) );
 
