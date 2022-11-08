@@ -96,7 +96,6 @@ public class KafkaDataControl {
 
     public void writeToKafka ( Position position ) {
         Mono.just( position )
-                .filter( this.getCheckPosition() )
                 .subscribe( position1 -> {
                     this.getKafkaTemplate().send( this.getRAW_GPS_LOCATION_TOPIC_PROD(),
                                     SerDes
