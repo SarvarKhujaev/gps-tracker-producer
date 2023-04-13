@@ -27,21 +27,18 @@ public class Server {
         mongoDBHostNameBig = "216.52.183.242";
         mongoDBHostNameMini = "216.52.183.242";
         mongoDbPasswordBig = "TShnbYhjQ44EFyjxbnpk";
-        mongoDbPasswordMini = "0Eld3dKXRW8xW7lasDVC";
-    }
+        mongoDbPasswordMini = "0Eld3dKXRW8xW7lasDVC"; }
 
     public void initServers() {
         new TeltonikaProtocol().initializeServers( serverList );
-        start();
-    }
+        start(); }
 
     public void start() {
-        serverList.forEach( trackerServer -> {
-            try {
-                trackerServer.start();
-            } catch (InterruptedException e) { e.printStackTrace(); }
-        });
-    }
+        serverList
+                .parallelStream()
+                .forEach( trackerServer -> {
+                    try { trackerServer.start(); }
+                    catch ( InterruptedException e ) { e.printStackTrace(); } } ); }
 }
 
 

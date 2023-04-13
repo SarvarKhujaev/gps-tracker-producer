@@ -13,15 +13,13 @@ public class OpenChannelHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        super.channelActive(ctx);
-        server.getChannelGroup().add(ctx.channel());
-        ctx.fireChannelActive();
-    }
+        super.channelActive( ctx );
+        server.getChannelGroup().add( ctx.channel() );
+        ctx.fireChannelActive(); }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        super.channelInactive(ctx);
-        server.getChannelGroup().remove(ctx.channel());
-        ctx.fireChannelInactive();
-    }
+        super.channelInactive( ctx );
+        server.getChannelGroup().remove( ctx.channel() );
+        ctx.fireChannelInactive(); }
 }
