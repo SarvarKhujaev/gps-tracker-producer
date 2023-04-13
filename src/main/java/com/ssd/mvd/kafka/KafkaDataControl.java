@@ -3,7 +3,6 @@ package com.ssd.mvd.kafka;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.function.Supplier;
-import java.util.function.Predicate;
 
 import com.ssd.mvd.netty.Position;
 import com.ssd.mvd.GpsTrackerApplication;
@@ -19,11 +18,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 public class KafkaDataControl {
     private static KafkaDataControl instance = new KafkaDataControl();
     private final Logger logger = Logger.getLogger( KafkaDataControl.class.toString() );
-
-    private final Predicate< Position > checkPosition = position ->
-            position.getLatitude() > 0
-            && position.getLongitude() > 0
-            && position.getDeviceTime().after( new Date( 1605006666774L ) );
 
     private final String KAFKA_BROKER = GpsTrackerApplication
             .context
