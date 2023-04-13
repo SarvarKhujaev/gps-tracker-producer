@@ -1,6 +1,7 @@
 package com.ssd.mvd.netty;
 
 import com.ssd.mvd.GpsTrackerApplication;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,18 +28,21 @@ public class Server {
         mongoDBHostNameBig = "216.52.183.242";
         mongoDBHostNameMini = "216.52.183.242";
         mongoDbPasswordBig = "TShnbYhjQ44EFyjxbnpk";
-        mongoDbPasswordMini = "0Eld3dKXRW8xW7lasDVC"; }
+        mongoDbPasswordMini = "0Eld3dKXRW8xW7lasDVC";
+    }
 
     public void initServers() {
         new TeltonikaProtocol().initializeServers( serverList );
-        start(); }
+        start();
+    }
 
     public void start() {
-        serverList
-                .parallelStream()
-                .forEach( trackerServer -> {
-                    try { trackerServer.start(); }
-                    catch ( InterruptedException e ) { e.printStackTrace(); } } ); }
+        serverList.forEach( trackerServer -> {
+            try {
+                trackerServer.start();
+            } catch (InterruptedException e) { e.printStackTrace(); }
+        });
+    }
 }
 
 

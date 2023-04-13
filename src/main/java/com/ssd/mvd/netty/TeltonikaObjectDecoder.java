@@ -16,30 +16,43 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
 
     private void parseIdentification( Channel channel, SocketAddress remoteAddress, ByteBuf buf ) {
         int length = buf.readUnsignedShort();
-        String imei = buf.toString( buf.readerIndex(), length, StandardCharsets.US_ASCII );
-        boolean result = true;
+        String imei = buf.toString(buf.readerIndex(), length, StandardCharsets.US_ASCII);
+        boolean result = identify(imei);
 
         if ( channel != null ) {
             ByteBuf response = Unpooled.buffer(1 );
-            if ( result ) {
-                response.writeByte( 1 );
-                channel.attr( AttributeKey.valueOf("imei" ) ).set( imei );
-            } else response.writeByte( 0 );
-            channel.writeAndFlush( response ); } }
+            if (result) {
+                response.writeByte(1);
+                channel.attr(AttributeKey.valueOf("imei")).set(imei);
+            } else {
+                response.writeByte(0);
+            }
+            channel.writeAndFlush( response );
+        }
+    }
+
+    private boolean identify(String imei){
+        return true;
+    }
 
     private static final int CODEC_GH3000 = 0x07;
-    private static final int CODEC_12 = 0x0C;
     private static final int CODEC_8 = 0x08;
+    private static final int CODEC_12 = 0x0C;
 
-    private void decodeSerial( Position position, ByteBuf buf ) { position.set( Position.KEY_TYPE, buf.readUnsignedByte() ); }
+    private void decodeSerial(Position position, ByteBuf buf) {
 
-    private void decodeLocation( Position position, ByteBuf buf, int codec )  {
+        position.set(Position.KEY_TYPE, buf.readUnsignedByte());
+
+    }
+
+    private void decodeLocation(Position position, ByteBuf buf, int codec) {
 
         int globalMask = 0x0f; //15
 
-        if ( codec == CODEC_GH3000 ) {
+        if (codec == CODEC_GH3000) {
             long time = buf.readUnsignedInt() & 0x3fffffff;
             time += 1167609600; // 2007-01-01 00:00:00
+            System.out.println( "CODEC_GH3000" );
 
             globalMask = buf.readUnsignedByte();
             if ( BitUtil.check( globalMask, 0 ) ) {
@@ -47,29 +60,44 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
 
                 int locationMask = buf.readUnsignedByte();
 
-                if ( BitUtil.check(locationMask, 0 ) ) {
-                    position.setLatitude( buf.readFloat() );
-                    position.setLongitude( buf.readFloat() ); }
+                if (BitUtil.check(locationMask, 0)) {
+                    position.setLatitude(buf.readFloat());
+                    position.setLongitude(buf.readFloat());
+                }
 
-                if ( BitUtil.check( locationMask, 1 ) ) position.setAltitude( buf.readUnsignedShort() );
+                if (BitUtil.check(locationMask, 1)) {
+                    position.setAltitude(buf.readUnsignedShort());
+                }
 
-                if ( BitUtil.check( locationMask, 2 ) ) position.setCourse( buf.readUnsignedByte() * 360.0 / 256 );
+                if (BitUtil.check(locationMask, 2)) {
+                    position.setCourse(buf.readUnsignedByte() * 360.0 / 256);
+                }
 
-                if ( BitUtil.check( locationMask, 3 ) ) position.setSpeed( buf.readUnsignedByte() );
+                if (BitUtil.check(locationMask, 3)) {
+                    position.setSpeed(buf.readUnsignedByte());
+                }
 
-                if ( BitUtil.check( locationMask, 4 ) ) {
+                if (BitUtil.check(locationMask, 4)) {
                     int satellites = buf.readUnsignedByte();
-                    position.setValid( satellites >= 3 ); }
+                    position.setValid(satellites >= 3);
+                }
 
-                if ( BitUtil.check( locationMask, 5 ) ) {
-                    position.set( Position.KEY_LAC, buf.readUnsignedShort() );
-                    position.set( Position.KEY_CID, buf.readUnsignedShort() ); }
+                if (BitUtil.check(locationMask, 5)) {
+                    position.set(Position.KEY_LAC, buf.readUnsignedShort());
+                    position.set(Position.KEY_CID, buf.readUnsignedShort());
+                }
 
-                if ( BitUtil.check( locationMask, 6 ) ) position.set( Position.KEY_GSM, buf.readUnsignedByte() );
+                if (BitUtil.check(locationMask, 6)) {
+                    position.set(Position.KEY_GSM, buf.readUnsignedByte());
+                }
 
-                if ( BitUtil.check( locationMask, 7 ) ) position.set( "operator", buf.readUnsignedInt() ); }
+                if (BitUtil.check(locationMask, 7)) {
+                    position.set("operator", buf.readUnsignedInt());
+                }
+            }
         } else {
-            position.setTime( new Date( buf.readLong() ) );
+            position.setTime( new Date(buf.readLong() ) );
+
             position.set("priority", buf.readUnsignedByte());
 
             position.setLongitude(buf.readInt() / 10000000.0);
@@ -78,95 +106,118 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
             position.setCourse(buf.readUnsignedShort());
 
             int satellites = buf.readUnsignedByte();
-            position.set( Position.KEY_SATELLITES, satellites );
+            position.set(Position.KEY_SATELLITES, satellites);
 
-            position.setValid( satellites != 0 );
+            position.setValid(satellites != 0);
 
-            position.setSpeed( buf.readUnsignedShort() );
+            position.setSpeed(buf.readUnsignedShort());
 
             position.set(Position.KEY_EVENT, buf.readUnsignedByte());
 
-            position.setPort( Server.portForTeltonika );
+            position.setPort(Server.portForTeltonika);
 
             buf.readUnsignedByte(); // total IO data records
+
         }
 
         // Read 1 byte data
-        if ( BitUtil.check( globalMask, 1 ) ) {
+        if (BitUtil.check(globalMask, 1)) {
             int cnt = buf.readUnsignedByte();
-            for ( int j = 0; j < cnt; j++ ) this.decodeOtherParameter( position, buf.readUnsignedByte(), buf, 1 ); }
+            for (int j = 0; j < cnt; j++) {
+                int id = buf.readUnsignedByte();
+                decodeOtherParameter(position, id, buf, 1 );
+//                if (id == 1) {
+//                    position.set(Position.KEY_POWER, buf.readUnsignedByte());
+//                } else {
+//                    position.set(Position.PREFIX_IO + id, buf.readUnsignedByte());
+//                }
+            }
+        }
 
         // Read 2 byte data
-        if ( BitUtil.check( globalMask, 2 ) ) {
+        if (BitUtil.check(globalMask, 2)) {
             int cnt = buf.readUnsignedByte();
-            for ( int j = 0; j < cnt; j++ ) {
-                this.decodeOtherParameter( position, buf.readUnsignedByte(), buf, 2 );
-                Unpooled.buffer( 2 ).writeByte( 1 ); } }
+            for (int j = 0; j < cnt; j++) {
+                int id = buf.readUnsignedByte();
+                decodeOtherParameter(position, id, buf, 2 );
+                Unpooled.buffer( 2 ).writeByte( 1 );
+//                position.set(Position.PREFIX_IO + buf.readUnsignedByte(), buf.readUnsignedShort());
+            }
+        }
 
         // Read 4 byte data
-        if ( BitUtil.check( globalMask, 3 ) ) {
+        if (BitUtil.check(globalMask, 3)) {
             int cnt = buf.readUnsignedByte();
-            for ( int j = 0; j < cnt; j++ ) {
+            for (int j = 0; j < cnt; j++) {
                 int id = buf.readUnsignedByte();
-                decodeOtherParameter( position, id, buf, 4 ); } }
+                decodeOtherParameter(position, id, buf, 4);
+//                position.set(Position.PREFIX_IO + buf.readUnsignedByte(), buf.readUnsignedInt());
+            }
+        }
 
         // Read 8 byte data
-        if ( codec == CODEC_8 ) {
+        if (codec == CODEC_8) {
             int cnt = buf.readUnsignedByte();
-            for ( int j = 0; j < cnt; j++ ) decodeOtherParameter( position, buf.readUnsignedByte(), buf, 8 ); } }
+            for (int j = 0; j < cnt; j++) {
+                int id = buf.readUnsignedByte();
+                decodeOtherParameter(position, id, buf, 8 );
+//                position.set(Position.PREFIX_IO + buf.readUnsignedByte(), buf.readLong());
+            }
+        }
+    }
 
-    private void decodeOtherParameter ( Position position, int id, ByteBuf buf, int length ) {
-        switch ( id ) {
+    private void decodeOtherParameter(Position position, int id, ByteBuf buf, int length) {
+        switch (id) {
             case 1:
             case 2:
             case 3:
             case 4:
-                position.set( "di" + id, this.readValue( buf, length, false ) );
+                position.set("di" + id, readValue(buf, length, false));
                 break;
             case 9:
-                position.set( Position.PREFIX_ADC + 1, this.readValue( buf, length, false ) );
+                position.set(Position.PREFIX_ADC + 1, readValue(buf, length, false));
                 break;
             case 10:
-                position.set(Position.PREFIX_ADC + 2, this.readValue( buf, length, false ) );
+                position.set(Position.PREFIX_ADC + 2, readValue(buf, length, false));
                 break;
             case 16:
-                position.set(Position.KEY_ODOMETER, this.readValue(buf, length, false));
+                position.set(Position.KEY_ODOMETER, readValue(buf, length, false));
                 break;
             case 17:
-                position.set("axisX", this.readValue(buf, length, true));
+                position.set("axisX", readValue(buf, length, true));
                 break;
             case 18:
-                position.set("axisY", this.readValue(buf, length, true));
+                position.set("axisY", readValue(buf, length, true));
                 break;
             case 19:
-                position.set("axisZ", this.readValue(buf, length, true));
+                position.set("axisZ", readValue(buf, length, true));
                 break;
             case 21:
-                position.set(Position.KEY_GSM, this.readValue(buf, length, false));
+                position.set(Position.KEY_GSM, readValue(buf, length, false));
                 break;
             case 25:
             case 26:
             case 27:
             case 28:
-                position.set(Position.PREFIX_TEMP + (id - 24 + 4), this.readValue(buf, length, true) * 0.1);
+                position.set(Position.PREFIX_TEMP + (id - 24 + 4), readValue(buf, length, true) * 0.1);
                 break;
             case 66:
-                position.set(Position.KEY_POWER, this.readValue(buf, length, false) * 0.001);
+                position.set(Position.KEY_POWER, readValue(buf, length, false) * 0.001);
                 break;
             case 67:
-                position.set(Position.KEY_BATTERY, this.readValue(buf, length, false) * 0.001);
+                position.set(Position.KEY_BATTERY, readValue(buf, length, false) * 0.001);
                 break;
             case 69:
-                position.set(Position.KEY_STATUS, this.readValue(buf, length, false));
+                position.set(Position.KEY_STATUS, readValue(buf, length, false));
                 break;
             case 72:
             case 73:
             case 74:
-                position.set(Position.PREFIX_TEMP + (id - 71), this.readValue(buf, length, true) * 0.1);
+                position.set(Position.PREFIX_TEMP + (id - 71), readValue(buf, length, true) * 0.1);
                 break;
             case 78:
             case 80:
-                position.set("workMode",  this.readValue( buf, length, false ));
+                position.set("workMode", readValue(buf, length, false));
                 break;
             case 90:
             case 115:
@@ -179,16 +230,16 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
             case 179:
             case 180:
             case 181:
-                position.set(Position.KEY_PDOP,  this.readValue( buf, length, false ) * 0.1);
+                position.set(Position.KEY_PDOP, readValue(buf, length, false) * 0.1);
                 break;
             case 182:
-                position.set(Position.KEY_HDOP,  this.readValue( buf, length, false ) * 0.1);
+                position.set(Position.KEY_HDOP, readValue(buf, length, false) * 0.1);
                 break;
             case 199:
-                position.set(Position.KEY_ODOMETER_TRIP,  this.readValue( buf, length, false ));
+                position.set(Position.KEY_ODOMETER_TRIP, readValue(buf, length, false));
                 break;
             case 236:
-                if ( this.readValue( buf, length, false ) == 1) {
+                if (readValue(buf, length, false) == 1) {
                     position.set(Position.KEY_ALARM, Position.ALARM_GENERAL);
                 }
                 break;
@@ -202,7 +253,7 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
                 position.set(Position.KEY_OPERATOR, readValue(buf, length, false));
                 break;
             case 253:
-                switch ((int) this.readValue( buf, length, false )) {
+                switch ((int) readValue(buf, length, false)) {
                     case 1:
                         position.set(Position.KEY_ALARM, Position.ALARM_ACCELERATION);
                         break;
@@ -217,20 +268,31 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
                 }
                 break;
             case 389:
-                if ( BitUtil.between( this.readValue( buf, length, false ), 4, 8) == 1) position.set(Position.KEY_ALARM, Position.ALARM_SOS);
+                if (BitUtil.between(readValue(buf, length, false), 4, 8) == 1) {
+                    position.set(Position.KEY_ALARM, Position.ALARM_SOS);
+                }
                 break;
             default:
-                position.set(Position.PREFIX_IO + id, this.readValue( buf, length, false));
-                break; } }
+                position.set(Position.PREFIX_IO + id, readValue(buf, length, false));
+                break;
+        }
+    }
 
-    private long readValue( ByteBuf buf, int length, boolean signed ) { return switch ( length ) {
-            case 1 -> signed ? buf.readByte() : buf.readUnsignedByte();
-            case 2 -> signed ? buf.readShort() : buf.readUnsignedShort();
-            case 4 -> signed ? buf.readInt() : buf.readUnsignedInt();
-            default -> buf.readLong(); }; }
+    private long readValue(ByteBuf buf, int length, boolean signed) {
+        switch (length) {
+            case 1:
+                return signed ? buf.readByte() : buf.readUnsignedByte();
+            case 2:
+                return signed ? buf.readShort() : buf.readUnsignedShort();
+            case 4:
+                return signed ? buf.readInt() : buf.readUnsignedInt();
+            default:
+                return buf.readLong();
+        }
+    }
 
-    private List< Position > parseData( Channel channel, ByteBuf buf ) {
-        final List< Position > positions = new LinkedList<>();
+    private List<Position> parseData(Channel channel, ByteBuf buf ) {
+        List<Position> positions = new LinkedList<>();
 
         buf.skipBytes(4); // marker
         buf.readUnsignedInt(); // data length
@@ -238,23 +300,33 @@ public class TeltonikaObjectDecoder extends BaseObjectDecoder {
         int count = buf.readUnsignedByte();
         for ( int i = 0; i < count; i++ ) {
             Position position = new Position();
-            position.setProtocol( "Teltonika" );
-            if ( codec == CODEC_12 ) decodeSerial(position, buf);
-            else decodeLocation(position, buf, codec);
-            positions.add(position); }
+            position.setProtocol("Teltonika");
+            if (codec == CODEC_12) {
+                decodeSerial(position, buf);
+            } else {
+                decodeLocation(position, buf, codec);
+            } positions.add(position);
+        }
 
         //TODO -> need to define what to send to tracker in order to get next track
         if ( channel != null ) {
             System.out.println( "\n\nSending request".toUpperCase( Locale.ROOT ) );
             ByteBuf response = Unpooled.buffer(4 );
-            response.writeInt( count );
-            channel.writeAndFlush( response ); }
-        return positions; }
+            response.writeInt(count);
+            channel.writeAndFlush( response );
+        }
+        return positions;
+    }
 
     @Override
     protected Object decode( Channel channel, SocketAddress remoteAddress, Object msg) {
         ByteBuf buf = (ByteBuf) msg;
-        if ( buf.getUnsignedShort(0) > 0 ) parseIdentification( channel, remoteAddress, buf );
-        else return parseData( channel, buf );
-        return null; }
+        if ( buf.getUnsignedShort(0) > 0 ) {
+            parseIdentification( channel, remoteAddress, buf );
+        } else {
+            return parseData( channel, buf );
+        }
+        return null;
+    }
+
 }

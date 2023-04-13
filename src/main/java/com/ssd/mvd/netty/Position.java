@@ -1,11 +1,13 @@
 package com.ssd.mvd.netty;
 
-import java.util.LinkedHashMap;
-import java.util.Date;
-import java.util.UUID;
-import java.util.Map;
+import lombok.Data;
 
-@lombok.Data
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+@Data
 public class Position {
     // only for Car
     private String icon; // иконка патрульного выбирается исходя из типа патрульного
@@ -86,6 +88,10 @@ public class Position {
 
     private Map< String, Object > attributes = new LinkedHashMap<>();
 
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
     public void set(String key, boolean value) {
         attributes.put(key, value);
     }
@@ -107,6 +113,8 @@ public class Position {
             attributes.put(key, value);
         }
     }
+
+    public Object getFuel () { return this.attributes.get( KEY_FUEL ); }
 
     public void add( Map.Entry<String, Object> entry ) { if (entry != null && entry.getValue() != null) attributes.put( entry.getKey(), entry.getValue() ); }
 
@@ -147,11 +155,19 @@ public class Position {
 
     private boolean valid;
 
+    public boolean getValid() {
+        return valid;
+    }
+
     public void setValid(boolean valid) {
         this.valid = valid;
     }
 
     private double latitude;
+
+    public double getLatitude() {
+        return latitude;
+    }
 
     public void setLatitude(double latitude) {
         this.latitude = latitude;
@@ -159,11 +175,19 @@ public class Position {
 
     private double longitude;
 
+    public double getLongitude() {
+        return longitude;
+    }
+
     public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
 
     private double altitude;
+
+    public double getAltitude() {
+        return altitude;
+    }
 
     public void setAltitude(double altitude) {
         this.altitude = altitude;
@@ -171,11 +195,19 @@ public class Position {
 
     private double speed; // value in knots
 
+    public double getSpeed() {
+        return speed;
+    }
+
     public void setSpeed(double speed) {
         this.speed = speed;
     }
 
     private double course;
+
+    public double getCourse() {
+        return course;
+    }
 
     public void setCourse( double course ) {
         this.course = course;
@@ -184,6 +216,10 @@ public class Position {
     private String address;
 
     private int port;
+
+    public int getPort() {
+        return port;
+    }
 
     public void setPort( int port ) {
         this.port = port;
