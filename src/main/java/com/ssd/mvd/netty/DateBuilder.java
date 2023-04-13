@@ -1,11 +1,10 @@
 package com.ssd.mvd.netty;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
+import java.util.Date;
 
 public class DateBuilder {
-
     private final Calendar calendar;
 
     public DateBuilder() {
@@ -48,17 +47,6 @@ public class DateBuilder {
         return setYear(year).setMonth(month).setDay(day);
     }
 
-    public DateBuilder setDateReverse(int day, int month, int year) {
-        return setDate(year, month, day);
-    }
-
-    public DateBuilder setCurrentDate() {
-        Calendar now = Calendar.getInstance(calendar.getTimeZone());
-        return setYear(now.get(Calendar.YEAR))
-                .setMonth(now.get(Calendar.MONTH) + 1)
-                .setDay(now.get(Calendar.DAY_OF_MONTH));
-    }
-
     public DateBuilder setHour(int hour) {
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         return this;
@@ -69,37 +57,14 @@ public class DateBuilder {
         return this;
     }
 
-    public DateBuilder addMinute(int minute) {
-        calendar.add(Calendar.MINUTE, minute);
-        return this;
-    }
-
     public DateBuilder setSecond(int second) {
         calendar.set(Calendar.SECOND, second);
-        return this;
-    }
-
-    public DateBuilder addSeconds(long seconds) {
-        calendar.setTimeInMillis(calendar.getTimeInMillis() + seconds * 1000);
         return this;
     }
 
     public DateBuilder setMillis(int millis) {
         calendar.set(Calendar.MILLISECOND, millis);
         return this;
-    }
-
-    public DateBuilder addMillis(long millis) {
-        calendar.setTimeInMillis(calendar.getTimeInMillis() + millis);
-        return this;
-    }
-
-    public DateBuilder setTime(int hour, int minute, int second) {
-        return setHour(hour).setMinute(minute).setSecond(second);
-    }
-
-    public DateBuilder setTimeReverse(int second, int minute, int hour) {
-        return setHour(hour).setMinute(minute).setSecond(second);
     }
 
     public DateBuilder setTime(int hour, int minute, int second, int millis) {
