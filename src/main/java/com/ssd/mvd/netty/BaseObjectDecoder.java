@@ -47,17 +47,13 @@ public abstract class BaseObjectDecoder extends ChannelInboundHandlerAdapter {
             if ( decodedMessage != null ) {
                 if (decodedMessage instanceof Collection) {
                     Flux.fromStream( ( (Collection<?>) decodedMessage ).stream() )
-                            .parallel( ( (Collection<?>) decodedMessage ).size() )
+                            .parallel()
                             .runOn( Schedulers.parallel() )
-                            .map( o -> {
-                                this.saveOriginal(ctx.channel().attr(AttributeKey.valueOf("imei")).get().toString(), Integer.valueOf(port), o, msg);
-                                ctx.write( o );
-                                return ctx; } )
-                            .sequential()
-                            .publishOn( Schedulers.single() )
-                            .subscribe();
+                            .subscribe( o -> {
+                                saveOriginal(ctx.channel().attr(AttributeKey.valueOf("imei")).get().toString(), Integer.valueOf(port), o, msg);
+                                ctx.write( o ); } );
                 } else {
-                    this.saveOriginal(ctx.channel().attr(AttributeKey.valueOf("imei")).get().toString(), Integer.valueOf(port), decodedMessage, msg );
+                    saveOriginal(ctx.channel().attr(AttributeKey.valueOf("imei")).get().toString(), Integer.valueOf(port), decodedMessage, msg );
                     ctx.write( decodedMessage );
                 }
             }
