@@ -11,7 +11,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.ByteBuf;
 
 import com.ssd.mvd.kafka.KafkaDataControl;
-import reactor.core.scheduler.Schedulers;
 import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
@@ -24,7 +23,7 @@ public abstract class BaseObjectDecoder extends ChannelInboundHandlerAdapter {
     private void saveOriginal( String deviceId, Integer port, Object decodedMessage, Object originalMessage ) {
         try {
             if ( decodedMessage instanceof Position ) {
-                final Position position = (Position) decodedMessage;
+                Position position = (Position) decodedMessage;
                 if (originalMessage instanceof ByteBuf) {
                     ByteBuf buf = (ByteBuf) originalMessage;
                     position.set(Position.KEY_ORIGINAL, ByteBufUtil.hexDump(buf, 0, buf.writerIndex()));
@@ -47,8 +46,6 @@ public abstract class BaseObjectDecoder extends ChannelInboundHandlerAdapter {
             if ( decodedMessage != null ) {
                 if (decodedMessage instanceof Collection) {
                     Flux.fromStream( ( (Collection<?>) decodedMessage ).stream() )
-                            .parallel()
-                            .runOn( Schedulers.parallel() )
                             .subscribe( o -> {
                                 saveOriginal(ctx.channel().attr(AttributeKey.valueOf("imei")).get().toString(), Integer.valueOf(port), o, msg);
                                 ctx.write( o ); } );
