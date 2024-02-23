@@ -1,8 +1,9 @@
 package com.ssd.mvd.kafka;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
+
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.gson.Gson;
@@ -28,7 +29,9 @@ public class KafkaDataControl {
             .getEnvironment()
             .getProperty( "variables.RAW_GPS_LOCATION_TOPIC_PROD" );
 
-    public static KafkaDataControl getInstance () { return instance != null ? instance : ( instance = new KafkaDataControl() ); }
+    public static KafkaDataControl getInstance () {
+        return instance != null ? instance : ( instance = new KafkaDataControl() );
+    }
 
     private final Supplier< Map< String, Object > > getKafkaSenderOptions = () -> Map.of(
             ProducerConfig.ACKS_CONFIG, "-1",
@@ -48,7 +51,9 @@ public class KafkaDataControl {
             SenderOptions.< String, String >create( this.getGetKafkaSenderOptions().get() )
                     .maxInFlight( 1024 ) );
 
-    private KafkaDataControl () { this.getLogger().info( "KafkaDataControl was created" ); }
+    private KafkaDataControl () {
+        this.getLogger().info( "KafkaDataControl was created" );
+    }
 
     private final Consumer< Position > writeToKafka = position ->
             this.getKafkaSender()
@@ -62,5 +67,6 @@ public class KafkaDataControl {
     public void clear () {
         this.getLogger().info( "Kafka was closed" );
         this.getKafkaSender().close();
-        instance = null; }
+        instance = null;
+    }
 }
