@@ -24,10 +24,7 @@ public class KafkaDataControl {
     private final Logger logger = Logger.getLogger( KafkaDataControl.class.toString() );
 
     // топик для сырых данных перед обработкой для продакшена
-    private final String RAW_GPS_LOCATION_TOPIC_PROD = GpsTrackerApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.RAW_GPS_LOCATION_TOPIC_PROD" );
+    private final String RAW_GPS_LOCATION_TOPIC_PROD = "RAW_GPS_LOCATION_TOPIC_DEV";
 
     public static KafkaDataControl getInstance () {
         return instance != null ? instance : ( instance = new KafkaDataControl() );
@@ -36,16 +33,11 @@ public class KafkaDataControl {
     private final Supplier< Map< String, Object > > getKafkaSenderOptions = () -> Map.of(
             ProducerConfig.ACKS_CONFIG, "-1",
             ProducerConfig.MAX_BLOCK_MS_CONFIG, 33554432 * 20,
-            ProducerConfig.CLIENT_ID_CONFIG, GpsTrackerApplication
-                    .context
-                    .getEnvironment()
-                    .getProperty( "variables.GROUP_ID_FOR_KAFKA" ),
-            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, GpsTrackerApplication
-                    .context
-                    .getEnvironment()
-                    .getProperty( "variables.KAFKA_BROKER" ),
+            ProducerConfig.CLIENT_ID_CONFIG, this.getClass().getName(),
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092",
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class,
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class );
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class
+    );
 
     private final KafkaSender< String, String > kafkaSender = KafkaSender.create(
             SenderOptions.< String, String >create( this.getGetKafkaSenderOptions().get() )
