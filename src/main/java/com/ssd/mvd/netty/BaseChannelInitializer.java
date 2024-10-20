@@ -27,6 +27,6 @@ public abstract class BaseChannelInitializer extends ChannelInitializer<SocketCh
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         super.exceptionCaught(ctx, cause);
-        KafkaDataControl.getInstance().clear();
+        KafkaDataControl.getInstance().close();
     }
 }

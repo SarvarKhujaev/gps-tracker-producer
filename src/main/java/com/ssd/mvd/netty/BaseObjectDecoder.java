@@ -27,11 +27,10 @@ public abstract class BaseObjectDecoder extends ChannelInboundHandlerAdapter {
                 } else if (originalMessage instanceof String) {
                     position.set(Position.KEY_ORIGINAL, DatatypeConverter.printHexBinary( ((String) originalMessage).getBytes( StandardCharsets.US_ASCII ) ) );
                 } position.setDeviceId( deviceId );
-                KafkaDataControl.getInstance().getWriteToKafka().accept( position );
+                KafkaDataControl.getInstance().writeToKafka.accept( position );
             }
         } catch ( Exception e ) {
             System.out.println( "/n/nError in saveOriginal: " );
-            e.printStackTrace();
         }
     }
 
@@ -56,7 +55,7 @@ public abstract class BaseObjectDecoder extends ChannelInboundHandlerAdapter {
                 }
             }
         } catch ( Exception e ) {
-            KafkaDataControl.getInstance().clear();
+            KafkaDataControl.getInstance().close();
         } finally {
             ReferenceCountUtil.release( msg );
         }
